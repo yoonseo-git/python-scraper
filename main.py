@@ -3,55 +3,68 @@ import requests
 # BeautifulSoup -> HTML 파싱 라이브러리(데이터 추출)
 from bs4 import BeautifulSoup
 
-url = "https://weworkremotely.com/categories/remote-full-stack-programming-jobs"
-
-# get() -> URL에 GET 요청 보내기, response -> 서버 응답 객체(status_code, content 등 포함)
-response = requests.get(url)
-
-# soup -> HTML을 탐색 가능한 객체로 변환
-soup = BeautifulSoup(
-    response.content, # 응답 HTML 바이트 데이터
-    "html.parser", # Python 내장 HTML 파서 사용
-    )
-
-# find() -> 조건에 맞는 첫 번째 태그 반환
-# find_all() -> 조건에 맞는 모든 태그 리스트 반환
-# 메서드 체이닝으로 section 안의 li 전부 가져옴
-jobs = soup.find( 
-    "section",
-      class_="jobs",
-    ).find_all("li")
-
 all_jobs = []
 
-for job in jobs:
-    title_tag = job.find("span", class_="new-listing__header__title__text")
-    region_tag = job.find("p", class_="new-listing__company-headquarters")
-    company_tag = job.find("p", class_="new-listing__company-name")
-    url_tag = job.find("a", class_="listing-link--unlocked")
+def scrape_page(url):
+    print(f"Scrapping {url}...")
+    # get() -> URL에 GET 요청 보내기, response -> 서버 응답 객체(status_code, content 등 포함)
+    response = requests.get(url)
 
-    if title_tag is None or region_tag is None or company_tag is None or url_tag is None:
-        continue
+    # soup -> HTML을 탐색 가능한 객체로 변환
+    soup = BeautifulSoup(
+        response.content, # 응답 HTML 바이트 데이터
+        "html.parser", # Python 내장 HTML 파서 사용
+        )
 
-    title = title_tag.text
-    region = region_tag.text
-    company = company_tag.text
-    # 태그의 속성값 가져오기
-    # tag["속성명"] 형태로 접근
-    # tag.text는 태그 안 텍스트, tag["href"]는 태그 속성값
-    url = url_tag["href"] 
+    # find() -> 조건에 맞는 첫 번째 태그 반환
+    # find_all() -> 조건에 맞는 모든 태그 리스트 반환
+    # 메서드 체이닝으로 section 안의 li 전부 가져옴
+    jobs = soup.find( 
+        "section",
+        class_="jobs",
+        ).find_all("li")
 
-    # 각 job 데이터를 딕셔너리로 구조화
-    # all_jobs 리스트에 딕셔너리를 하나씩 추가
-    job_data = {
-        "title": title,
-        "region": region,
-        "company": company,
-        "url": f"https://weworkremotely.com{url}",
-    }
-    all_jobs.append(job_data)
+    for job in jobs:
+        title_tag = job.find("span", class_="new-listing__header__title__text")
+        region_tag = job.find("p", class_="new-listing__company-headquarters")
+        company_tag = job.find("p", class_="new-listing__company-name")
+        url_tag = job.find("a", class_="listing-link--unlocked")
 
-print(all_jobs)
+        if title_tag is None or region_tag is None or company_tag is None or url_tag is None:
+            continue
+
+        title = title_tag.text
+        region = region_tag.text
+        company = company_tag.text
+        # 태그의 속성값 가져오기
+        # tag["속성명"] 형태로 접근
+        # tag.text는 태그 안 텍스트, tag["href"]는 태그 속성값
+        url = url_tag["href"] 
+
+        # 각 job 데이터를 딕셔너리로 구조화
+        # all_jobs 리스트에 딕셔너리를 하나씩 추가
+        job_data = {
+            "title": title,
+            "region": region,
+            "company": company,
+            "url": f"https://weworkremotely.com{url}",
+        }
+        all_jobs.append(job_data)
+
+def get_pages(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+    return len(soup.find("div", class_="pagination").find_all("span", class_="page"))
+
+
+total_pages = get_pages("https://weworkremotely.com/remote-contract-jobs?page=1")
+
+for x in range(total_pages):
+    url = f"https://weworkremotely.com/remote-contract-jobs?page={x+1}"
+    scrape_page(url)
+
+print("Count all jobs :", len(all_jobs))
+
 
 # 딕셔너리 vs 리스트
 
