@@ -2,43 +2,51 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
 
-keywords = ["flutter", "python", "golang"]
-all_jobs = []
+class RemoteOKScrapper:
 
-driver = webdriver.Chrome()
+    def __init__(self, keywords):
+        self.keywords = keywords
+        self.all_jobs = []
+        self.driver = webdriver.Chrome()
+        
+    def scrape_page(self, url):
+        print(f"Scrapping {url} ...")
+        self.driver.get(url)
+        time.sleep(3)
 
-def scape_page(url):
-    print(f"Scrapping {url} ...")
-    driver.get(url)
-    time.sleep(3)
+        soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
-    soup = BeautifulSoup(driver.page_source, "html.parser")
+        tbody = soup.find("tbody")
+        if tbody is None:
+            print(f"tbody 없음 : {url}")
+            return
+        
+        jobs = tbody.find_all("tr", attrs={"data-offset": True})
+        
+        for job in jobs:
+            title_tag = job.find("h2", itemprop="title")
+            company_tag = job.find("h3", itemprop="name")
+            location_tag = job.find("div", class_="location")
+        
+            if title_tag is None or company_tag is None or location_tag is None:
+                continue
+        
+            job_data = {
+                    "title": title_tag.text.strip(),
+                    "company": company_tag.text.strip(),
+                    "location": location_tag.text.strip(),
+                }
+            self.all_jobs.append(job_data)
 
-    tbody = soup.find("tbody")
-    if tbody is None:
-        print(f"tbody 없음 : {url}")
-        return
 
-    jobs = tbody.find_all("tr", attrs={"data-offset": True})
+    def scrape(self):
+        for keyword in self.keywords:
+            url = f"https://remoteok.com/remote-{keyword}-jobs"
+            self.scrape_page(url)
+        self.driver.quit()
+        print(len(self.all_jobs))
 
-    for job in jobs:
-        title_tag = job.find("h2", itemprop="title")
-        company_tag = job.find("h3", itemprop="name")
-        location_tag = job.find("div", class_="location")
-
-        if title_tag is None or company_tag is None or location_tag is None:
-            continue
-
-        job_data = {
-            "title": title_tag.text.strip(),
-            "company": company_tag.text.strip(),
-            "location": location_tag.text.strip(),
-        }
-        all_jobs.append(job_data)
-
-for keyword in keywords:
-    url = f"https://remoteok.com/remote-{keyword}-jobs"
-    scape_page(url)
-
-driver.quit()
-print(len(all_jobs))
+# __init__ 실행 → keywords, all_jobs, driver 초기화
+scraper = RemoteOKScrapper(["flutter", "python", "golang"])
+# scrape() 실행 → keywords 순회 → scrape_page() 3번 호출 → driver.quit() → 결과 출력
+scraper.scrape()
