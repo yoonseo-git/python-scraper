@@ -15,13 +15,7 @@ class RemoteOKScrapper:
         time.sleep(3)
 
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
-
-        tbody = soup.find("tbody")
-        if tbody is None:
-            print(f"tbody 없음 : {url}")
-            return
-        
-        jobs = tbody.find_all("tr", attrs={"data-offset": True})
+        jobs = soup.find("tbody").find_all("tr", attrs={"data-offset": True})
         
         for job in jobs:
             title_tag = job.find("h2", itemprop="title")
