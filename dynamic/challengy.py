@@ -1,9 +1,9 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import time
+import csv
 
 keywords = ["flutter", "react", "java"]
-job_db = [] # 수집한 job 데이터 저장 리스트
 
 # Playwright, 브라우저를 전역에서 한 번만 생성 (함수 안에서 매번 만들면 오류 발생)
 # 함수 안에서 매번 sync_playwright().start() 호출하면
@@ -12,8 +12,9 @@ job_db = [] # 수집한 job 데이터 저장 리스트
 p = sync_playwright().start()
 browser = p.chromium.launch(headless=False)
 
-def scrape_page(url):
+def scrape_page(url, keyword):
     print(f"Scrapping {url}...")
+    local_jobs = []
 
     page = browser.new_page()
     page.goto(url)
@@ -44,14 +45,24 @@ def scrape_page(url):
             "link": link,
         }
 
-        job_db.append(job) # 전역 리스트에 추가
+        local_jobs.append(job) # 로컬 리스트에 추가
+
+    file = open(f"{keyword}.csv", "w", encoding="utf-8", newline="")
+    writer = csv.writer(file)
+
+    writer.writerow(["Title", "Company", "Reward", "Link"])
+
+    for job in local_jobs:
+        writer.writerow(job.values())
+
+    file.close()
 
 def scrape(keywords):
-    for keword in keywords: # 키워드별 URL 생성 후 스크랩
-        url = f"https://www.wanted.co.kr/search?query={keword}&search_method=direct&tab=position"
-        scrape_page(url)
-    print(job_db)
-    print(len(job_db)) # 총 수집된 job 수 출력
+    for keyword in keywords: # 키워드별 URL 생성 후 스크랩
+        url = f"https://www.wanted.co.kr/search?query={keyword}&search_method=direct&tab=position"
+        scrape_page(url, keyword)
+    
     p.stop() # Playwright 종료
+
 
 scrape(keywords)
