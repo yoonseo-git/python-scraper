@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Scrapper</title>
+  </head>
+  <body>
+    <!-- {{ }} -> Jinja2 변수 출력 문법 -->
+    <h1>Search Result for "{{keyword}}":</h1>
+
+    <!-- {% %} -> Jinja2 제어문 문법 (반복문, 조건문 등) -->
+    {% for job in jobs %}
+    <div>
+      <h2>{{job.title}}</h2>
+      <p>{{job.company}}</p>
+      <p>{{job.reward}}</p>
+      <a href="{{job.link}}">Link</a>
+    </div>
+    {% endfor %}
+  </body>
+</html>

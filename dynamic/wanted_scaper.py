@@ -56,13 +56,16 @@ class WantedScraper:
 
         file.close()
 
+        return local_jobs
+
 
     def scrape(self):
         for keyword in self.keywords:
             url = f"https://www.wanted.co.kr/search?query={keyword}&search_method=direct&tab=position"
-            self.scrape_page(url, keyword)
+            jobs = self.scrape_page(url, keyword)
         self.p.stop()
+        return jobs
 
 
-scraper = WantedScraper(["flutter", "react", "java"])
-scraper.scrape()
+# scraper = WantedScraper(["flutter", "react", "java"])
+# scraper.scrape()
